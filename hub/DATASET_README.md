@@ -76,6 +76,16 @@ the `image`) and return 12 fields in canonical form:
 Score with `eurodocbench-score --gold gold/test.jsonl --pred predictions.jsonl`
 (see the [specification](https://github.com/sinceaihq/eurodocbench/blob/main/docs/SPEC.md)).
 
+## Baseline results (test split)
+
+<!-- results:start -->
+<!-- results:end -->
+
+The keyword/regex rules were written for these documents and show that every
+answer is recoverable; the other rows are general systems. Per-field,
+per-locale and per-layout results and an error analysis are in the
+[technical report](https://github.com/sinceaihq/eurodocbench/blob/main/docs/REPORT.md).
+
 ## Files
 
 | path | content |

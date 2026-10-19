@@ -70,6 +70,12 @@ layout, date style, currency style and number of VAT rates.
 | Qwen2.5-1.5B-Instruct | PDF text or OCR text | Zero-shot: a system prompt that describes the canonical output format, the document text (≤ 6,000 characters), JSON-schema-constrained decoding, temperature 0. Q4_K_M quantisation, served by llama.cpp (build b11730) on CPU with two parallel slots per server. No examples from the benchmark. Apache-2.0 licence. |
 | EasyOCR | scan | EasyOCR 1.7.2 with its shared Latin recognition model configured for the 12 benchmark languages (Finnish uses the Swedish/Estonian character sets: EasyOCR has no Finnish pack); words grouped into lines by vertical overlap. |
 
+Runtime on the shared build server (AMD EPYC-Rome, 16 vCPU, no GPU; other
+jobs were running at the same time, so treat the numbers as rough):
+
+<!-- runtime:start -->
+<!-- runtime:end -->
+
 ## 5. Results (test split, 1,200 documents)
 
 <!-- results:start -->

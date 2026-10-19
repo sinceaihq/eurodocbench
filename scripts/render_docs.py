@@ -1,4 +1,5 @@
-"""Score the baseline runs and fill the result sections of README.md and docs/REPORT.md.
+"""Score the baseline runs and fill the result sections of README.md, docs/REPORT.md
+and the dataset card.
 
 python scripts/render_docs.py --gold data/test.jsonl --runs runs
 """
@@ -155,11 +156,41 @@ def main() -> None:
         )
     summary = "Test-split results: " + "; ".join(summary_bits) + "."
 
+    runtime = ["| step | engine | throughput | setting |", "|---|---|---|---|"]
+    ocr_meta = args.runs / "ocr-test" / "_meta.json"
+    if ocr_meta.exists():
+        m = json.loads(ocr_meta.read_text(encoding="utf-8"))
+        runtime.append(
+            f"| OCR | EasyOCR {m['easyocr_version']} | {m['seconds_per_page_mean']:.1f} s per page "
+            f"and worker | {m['workers']} workers × {m['threads_per_worker']} threads |"
+        )
+    for stem, name, track in SYSTEMS:
+        meta = args.runs / f"{stem}.meta.json"
+        if stem.startswith("qwen") and meta.exists():
+            m = json.loads(meta.read_text(encoding="utf-8"))
+            runtime.append(
+                f"| {name}, {track} track | {m['engine']} | {m['documents_per_minute']:.1f} "
+                f"documents per minute | {m['shards']} servers × {m['threads']} threads, "
+                f"{m['parallel_requests']} slots each |"
+            )
+    for stem, name, track in SYSTEMS:
+        meta = args.runs / f"{stem}.meta.json"
+        if stem.startswith("rules") and meta.exists():
+            m = json.loads(meta.read_text(encoding="utf-8"))
+            runtime.append(
+                f"| {name}, {track} track | Python | {m['documents_per_second']:.0f} "
+                f"documents per second | {m['threads']} thread |"
+            )
+
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     (ROOT / "README.md").write_text(fill(readme, "results", main_table), encoding="utf-8")
+    card_path = ROOT / "hub/DATASET_README.md"
+    card = card_path.read_text(encoding="utf-8")
+    card_path.write_text(fill(card, "results", main_table), encoding="utf-8")
     report = (ROOT / "docs/REPORT.md").read_text(encoding="utf-8")
     report = fill(report, "summary", summary)
     report = fill(report, "results", main_table)
+    report = fill(report, "runtime", "\n".join(runtime))
     report = fill(report, "fields", "\n".join(field_rows))
     report = fill(report, "breakdown", "\n".join(breakdown))
     report = fill(report, "errors", "\n".join(errors) or "No errors to analyse.")

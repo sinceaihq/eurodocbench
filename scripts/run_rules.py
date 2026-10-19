@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 from eurodocbench.baselines.rules import extract
@@ -27,11 +28,19 @@ def main() -> None:
         ids = [json.loads(line)["id"] for line in fh]
     src = args.data / args.split / "text" if args.source == "text" else args.ocr_dir
     assert src is not None, "--ocr-dir is required with --source ocr"
+    texts = [(src / f"{doc_id}.txt").read_text(encoding="utf-8") for doc_id in ids]
+    t0 = time.perf_counter()
+    preds = [extract(text) for text in texts]
+    seconds = time.perf_counter() - t0
     with args.out.open("w", encoding="utf-8") as out:
-        for doc_id in ids:
-            fields = extract((src / f"{doc_id}.txt").read_text(encoding="utf-8"))
+        for doc_id, fields in zip(ids, preds, strict=True):
             out.write(json.dumps({"id": doc_id, "fields": fields}, ensure_ascii=False) + "\n")
-    print(f"wrote {len(ids)} predictions to {args.out}")
+    meta = {"source": args.source, "split": args.split, "documents": len(ids),
+            "documents_per_second": len(ids) / seconds, "threads": 1}  # fmt: skip
+    args.out.with_suffix(".meta.json").write_text(
+        json.dumps(meta, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"wrote {len(ids)} predictions to {args.out} ({meta['documents_per_second']:.0f} docs/s)")
 
 
 if __name__ == "__main__":
