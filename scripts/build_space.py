@@ -89,12 +89,17 @@ def main() -> None:
         loc = g["locale"]
         image = f"images/{g['id']}.jpg"
         shutil.copy(args.data / "test" / "scan" / f"{g['id']}.jpg", args.out / image)
+        ocr = args.runs / "ocr-test" / f"{g['id']}.txt"
         docs.append(
             {
                 "id": g["id"],
                 "locale": loc,
                 "layout": g["layout"],
                 "image": image,
+                "text": (args.data / "test" / "text" / f"{g['id']}.txt").read_text(
+                    encoding="utf-8"
+                ),
+                "ocr": ocr.read_text(encoding="utf-8") if ocr.exists() else None,
                 "gold": g["fields"],
                 "predictions": {
                     name: {
