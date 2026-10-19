@@ -80,10 +80,12 @@ def main() -> None:
     parser.add_argument("--threads", type=int, default=6)
     parser.add_argument("--ctx", type=int, default=4096)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--shard", default="0/1", help="i/n: process every n-th document")
     args = parser.parse_args()
+    shard_i, shard_n = (int(x) for x in args.shard.split("/"))
 
     gold = [json.loads(line) for line in (args.data / f"{args.split}.jsonl").open(encoding="utf-8")]
-    gold = gold[: args.limit]
+    gold = gold[: args.limit][shard_i::shard_n]
     done: set[str] = set()
     if args.out.exists():  # resume
         done = {json.loads(line)["id"] for line in args.out.open(encoding="utf-8")}
