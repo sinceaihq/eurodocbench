@@ -93,7 +93,7 @@ per-locale and per-layout results and an error analysis are in the
 | `data/{dev,test}.parquet` | one row per document: `id`, `locale`, `language`, `country`, `layout`, `font`, `date_style`, `currency_style`, `image` (scan, JPEG), `pdf` (bytes), `text` (PDF text layer), `fields` (ground truth), `vat_breakdown`, `lines` (line items) |
 | `gold/{dev,test}.jsonl` | ground truth in the scorer's format |
 | `manifest.json` | SHA-256 of every generated file, generator version and seed |
-| `runs/` | baseline predictions and scores from the report |
+| `runs/` | baseline predictions (`*-test.jsonl`), their scores (`*.score.json`) and run settings (`*.meta.json`) from the report, and the EasyOCR output for both splits (`ocr-{dev,test}.jsonl`) |
 
 ## Splits
 
