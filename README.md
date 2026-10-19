@@ -84,11 +84,13 @@ eurodocbench-generate --out private --seed 739104 --dev 0 --test 20
 ```bash
 pip install -e ".[dev]"
 python scripts/run_rules.py --data data --split test --source text --out runs/rules-text-test.jsonl
-pip install easyocr llama-cpp-python
+pip install easyocr
 python scripts/run_ocr.py --data data --split test --out runs/ocr-test
 python scripts/run_rules.py --data data --split test --source ocr --ocr-dir runs/ocr-test --out runs/rules-ocr-test.jsonl
-python scripts/run_llm.py --data data --split test --source text --out runs/qwen2.5-1.5b-text-test.jsonl
-python scripts/run_llm.py --data data --split test --source ocr --ocr-dir runs/ocr-test --out runs/qwen2.5-1.5b-ocr-test.jsonl
+hf download Qwen/Qwen2.5-1.5B-Instruct-GGUF qwen2.5-1.5b-instruct-q4_k_m.gguf --local-dir .
+llama-server -m qwen2.5-1.5b-instruct-q4_k_m.gguf -t 3 -np 2 -c 4096 --port 8080 &  # llama.cpp b11730
+python scripts/run_llm.py --data data --split test --source text --server http://127.0.0.1:8080 --parallel 2 --out runs/qwen2.5-1.5b-text-test.jsonl
+python scripts/run_llm.py --data data --split test --source ocr --ocr-dir runs/ocr-test --server http://127.0.0.1:8080 --parallel 2 --out runs/qwen2.5-1.5b-ocr-test.jsonl
 ```
 
 `python scripts/check_reproducible.py` regenerates a sample of the published

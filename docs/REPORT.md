@@ -67,7 +67,7 @@ layout, date style, currency style and number of VAT rates.
 | system | input | description |
 |---|---|---|
 | Keyword/regex rules | PDF text or OCR text | Multilingual invoice vocabulary written independently of the generator's labels (it contains many terms the generator never uses), regular expressions for European number and date formats, and arithmetic consistency (net + VAT = total). Developed on the dev split. |
-| Qwen2.5-1.5B-Instruct | PDF text or OCR text | Zero-shot: a system prompt that describes the canonical output format, the document text (≤ 6,000 characters), JSON-schema-constrained decoding, temperature 0. Q4_K_M quantisation in llama.cpp on CPU. No examples from the benchmark. Apache-2.0 licence. |
+| Qwen2.5-1.5B-Instruct | PDF text or OCR text | Zero-shot: a system prompt that describes the canonical output format, the document text (≤ 6,000 characters), JSON-schema-constrained decoding, temperature 0. Q4_K_M quantisation, served by llama.cpp (build b11730) on CPU with two parallel slots per server. No examples from the benchmark. Apache-2.0 licence. |
 | EasyOCR | scan | EasyOCR 1.7.2 with its shared Latin recognition model configured for the 12 benchmark languages (Finnish uses the Swedish/Estonian character sets: EasyOCR has no Finnish pack); words grouped into lines by vertical overlap. |
 
 ## 5. Results (test split, 1,200 documents)
