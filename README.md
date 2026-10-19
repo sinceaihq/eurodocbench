@@ -72,8 +72,9 @@ recoverable and that the labels are consistent, not that the task is easy
 for general systems. A small open LLM run zero-shot on a CPU finds names,
 invoice numbers, VAT numbers and IBANs in 94–100 % of documents but gets
 only about half of the amounts right: it converts `33.261,30` into
-`33.261.30` instead of `33261.30`, or copies dates as printed. That is
-exactly where European formats differ. On simulated scans, OCR errors cut
+`33.261.30` instead of `33261.30`, copies dates as printed, and never adds
+up the VAT of invoices with two rates. That is exactly where European
+invoices differ. On simulated scans, OCR errors cut
 both systems to about two thirds of fields. See the [report](docs/REPORT.md)
 for per-field, per-locale and per-layout results and an error analysis.
 
