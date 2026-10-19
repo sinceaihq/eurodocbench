@@ -71,7 +71,7 @@ the `image`) and return 12 fields in canonical form:
 | `seller_name`, `buyer_name` | as printed |
 | `seller_vat_id`, `buyer_vat_id` | country prefix + number, no spaces (`buyer_vat_id` may be null) |
 | `iban` | no spaces (may be null) |
-| `net_amount`, `vat_amount`, `total_amount` | plain decimal, e.g. `1234.50` |
+| `net_amount`, `vat_amount`, `total_amount` | plain decimal, e.g. `1234.50`; `vat_amount` is the total over all VAT rates (invoices with two rates print only the per-rate lines) |
 
 Score with `eurodocbench-score --gold gold/test.jsonl --pred predictions.jsonl`
 (see the [specification](https://github.com/sinceaihq/eurodocbench/blob/main/docs/SPEC.md)).
@@ -79,6 +79,12 @@ Score with `eurodocbench-score --gold gold/test.jsonl --pred predictions.jsonl`
 ## Baseline results (test split)
 
 <!-- results:start -->
+| system | track | field accuracy | field F1 | document accuracy | hallucinated values | format errors |
+|---|---|---|---|---|---|---|
+| Keyword/regex rules | text | 100.0 | 100.0 | 100.0 | 0 | 0 |
+| Qwen2.5-1.5B-Instruct (zero-shot) | text | 82.7 | 82.5 | 27.8 | 146 | 1,581 |
+| EasyOCR → keyword/regex rules | scan | 66.5 | 75.5 | 2.9 | 24 | 0 |
+| EasyOCR → Qwen2.5-1.5B-Instruct | scan | 67.3 | 66.7 | 4.3 | 194 | 1,770 |
 <!-- results:end -->
 
 The keyword/regex rules were written for these documents and show that every

@@ -151,7 +151,7 @@ def main() -> None:
     summary_bits = []
     for name, (track, r) in results.items():
         summary_bits.append(
-            f"{name} ({track} track): {pct(r['field_accuracy'])} % field accuracy, "
+            f"{name}, {track} track: {pct(r['field_accuracy'])} % field accuracy, "
             f"{pct(r['document_accuracy'])} % of documents fully correct"
         )
     summary = "Test-split results: " + "; ".join(summary_bits) + "."

@@ -58,16 +58,24 @@ uses only the Python standard library.
 ## Baseline results (test split)
 
 <!-- results:start -->
+| system | track | field accuracy | field F1 | document accuracy | hallucinated values | format errors |
+|---|---|---|---|---|---|---|
+| Keyword/regex rules | text | 100.0 | 100.0 | 100.0 | 0 | 0 |
+| Qwen2.5-1.5B-Instruct (zero-shot) | text | 82.7 | 82.5 | 27.8 | 146 | 1,581 |
+| EasyOCR → keyword/regex rules | scan | 66.5 | 75.5 | 2.9 | 24 | 0 |
+| EasyOCR → Qwen2.5-1.5B-Instruct | scan | 67.3 | 66.7 | 4.3 | 194 | 1,770 |
 <!-- results:end -->
 
 How to read this: the keyword/regex system was written for these documents
 and reaches 100 % on the text track — it shows that every answer is
 recoverable and that the labels are consistent, not that the task is easy
-for general systems. A small open LLM run zero-shot on a CPU gets most
-identifiers right but struggles with the amounts and dates, which is exactly
-where European formats differ. OCR errors cost every system on the scan
-track. See the [report](docs/REPORT.md) for per-field, per-locale and
-per-layout results.
+for general systems. A small open LLM run zero-shot on a CPU finds names,
+invoice numbers, VAT numbers and IBANs in 94–100 % of documents but gets
+only about half of the amounts right: it converts `33.261,30` into
+`33.261.30` instead of `33261.30`, or copies dates as printed. That is
+exactly where European formats differ. On simulated scans, OCR errors cut
+both systems to about two thirds of fields. See the [report](docs/REPORT.md)
+for per-field, per-locale and per-layout results and an error analysis.
 
 ## Generate your own (private) test set
 

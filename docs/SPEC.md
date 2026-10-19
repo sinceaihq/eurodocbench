@@ -38,6 +38,9 @@ Converting "1 234,56 €", "€1,234.56" or "5. března 2026" into `1234.56` and
 `2026-03-05` is **part of the task**: these conversions are where
 general-purpose systems fail on European documents.
 
+Invoices with two VAT rates print one VAT line per rate and no VAT total
+(as many real invoices do); `vat_amount` is then the sum of those lines.
+
 ## 2. Documents
 
 | dimension | values |

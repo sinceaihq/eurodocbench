@@ -13,6 +13,7 @@ keyword/regex extractor, a small open LLM run zero-shot on CPU, and both of
 them behind open-source OCR for scanned pages.
 
 <!-- summary:start -->
+Test-split results: Keyword/regex rules, text track: 100.0 % field accuracy, 100.0 % of documents fully correct; Qwen2.5-1.5B-Instruct (zero-shot), text track: 82.7 % field accuracy, 27.8 % of documents fully correct; EasyOCR → keyword/regex rules, scan track: 66.5 % field accuracy, 2.9 % of documents fully correct; EasyOCR → Qwen2.5-1.5B-Instruct, scan track: 67.3 % field accuracy, 4.3 % of documents fully correct.
 <!-- summary:end -->
 
 ## 1. Motivation
@@ -74,26 +75,140 @@ Runtime on the shared build server (AMD EPYC-Rome, 16 vCPU, no GPU; other
 jobs were running at the same time, so treat the numbers as rough):
 
 <!-- runtime:start -->
+| step | engine | throughput | setting |
+|---|---|---|---|
+| OCR | EasyOCR 1.7.2 | 18.4 s per page and worker | 3 workers × 2 threads |
+| Qwen2.5-1.5B-Instruct (zero-shot), text track | llama.cpp server | 6.0 documents per minute | 2 servers × 3 threads, 2 slots each |
+| EasyOCR → Qwen2.5-1.5B-Instruct, scan track | llama.cpp server | 6.0 documents per minute | 2 servers × 3 threads, 2 slots each |
+| Keyword/regex rules, text track | Python | 129 documents per second | 1 thread |
+| EasyOCR → keyword/regex rules, scan track | Python | 128 documents per second | 1 thread |
 <!-- runtime:end -->
 
 ## 5. Results (test split, 1,200 documents)
 
 <!-- results:start -->
+| system | track | field accuracy | field F1 | document accuracy | hallucinated values | format errors |
+|---|---|---|---|---|---|---|
+| Keyword/regex rules | text | 100.0 | 100.0 | 100.0 | 0 | 0 |
+| Qwen2.5-1.5B-Instruct (zero-shot) | text | 82.7 | 82.5 | 27.8 | 146 | 1,581 |
+| EasyOCR → keyword/regex rules | scan | 66.5 | 75.5 | 2.9 | 24 | 0 |
+| EasyOCR → Qwen2.5-1.5B-Instruct | scan | 67.3 | 66.7 | 4.3 | 194 | 1,770 |
 <!-- results:end -->
 
 ### Per field
 
 <!-- fields:start -->
+| field | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| `invoice_number` | 100.0 | 98.0 | 47.2 | 93.0 |
+| `issue_date` | 100.0 | 78.8 | 91.3 | 63.4 |
+| `due_date` | 100.0 | 77.7 | 63.0 | 63.2 |
+| `currency` | 100.0 | 99.6 | 85.9 | 99.0 |
+| `seller_name` | 100.0 | 94.2 | 42.7 | 70.8 |
+| `seller_vat_id` | 100.0 | 96.5 | 75.7 | 74.6 |
+| `buyer_name` | 100.0 | 97.0 | 30.8 | 55.8 |
+| `buyer_vat_id` | 100.0 | 95.8 | 80.2 | 78.2 |
+| `iban` | 100.0 | 94.4 | 72.6 | 70.8 |
+| `net_amount` | 100.0 | 55.7 | 73.7 | 50.4 |
+| `vat_amount` | 100.0 | 49.1 | 65.6 | 39.2 |
+| `total_amount` | 100.0 | 56.1 | 69.6 | 49.8 |
 <!-- fields:end -->
 
 ### Per locale and layout
 
 <!-- breakdown:start -->
+**By locale** (field accuracy)
+
+| locale | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| cs-CZ | 100.0 | 82.5 | 59.6 | 58.8 |
+| da-DK | 100.0 | 77.5 | 73.2 | 67.1 |
+| de-DE | 100.0 | 72.8 | 69.2 | 68.3 |
+| en-IE | 100.0 | 88.2 | 65.9 | 71.5 |
+| es-ES | 100.0 | 81.9 | 68.1 | 72.2 |
+| fi-FI | 100.0 | 79.3 | 74.0 | 63.8 |
+| fr-FR | 100.0 | 86.8 | 65.4 | 68.5 |
+| it-IT | 100.0 | 83.1 | 58.7 | 64.8 |
+| nl-NL | 100.0 | 83.7 | 58.7 | 62.7 |
+| pl-PL | 100.0 | 81.8 | 66.6 | 62.8 |
+| pt-PT | 100.0 | 93.3 | 66.0 | 78.4 |
+| sv-SE | 100.0 | 81.8 | 72.8 | 69.2 |
+
+**By layout** (field accuracy)
+
+| layout | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| classic | 100.0 | 85.8 | 73.9 | 74.5 |
+| compact | 100.0 | 81.8 | 79.5 | 71.3 |
+| grid | 100.0 | 82.4 | 62.9 | 58.5 |
+| modern | 100.0 | 83.0 | 58.4 | 64.0 |
+| narrow | 100.0 | 80.5 | 57.8 | 68.4 |
+
+**By date style** (field accuracy)
+
+| date_style | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| long | 100.0 | 85.2 | 64.8 | 67.9 |
+| short | 100.0 | 82.2 | 66.9 | 67.2 |
+
+**By currency style** (field accuracy)
+
+| currency_style | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| code | 100.0 | 82.8 | 69.0 | 67.2 |
+| symbol | 100.0 | 82.7 | 65.5 | 67.4 |
+
+**By vat rates** (field accuracy)
+
+| vat_rates | Keyword/regex rules | Qwen2.5-1.5B-Instruct (zero-shot) | EasyOCR → keyword/regex rules | EasyOCR → Qwen2.5-1.5B-Instruct |
+|---|---|---|---|---|
+| multiple | 100.0 | 78.0 | 65.8 | 63.5 |
+| single | 100.0 | 84.3 | 66.8 | 68.7 |
+
 <!-- breakdown:end -->
 
 ### Error analysis
 
 <!-- errors:start -->
+**Qwen2.5-1.5B-Instruct (zero-shot)** — wrong amount and date answers by kind:
+
+| kind | count |
+|---|---|
+| amount not in canonical form | 1,161 |
+| date not in ISO form | 418 |
+| amount: other wrong value | 361 |
+| amount: another total copied | 133 |
+| date: other wrong value | 49 |
+| date: hallucinated due date | 46 |
+| amount missing | 15 |
+| date missing | 10 |
+
+**EasyOCR → keyword/regex rules** — wrong amount and date answers by kind:
+
+| kind | count |
+|---|---|
+| amount missing | 896 |
+| date missing | 495 |
+| amount: other wrong value | 195 |
+| date: other wrong value | 52 |
+| amount: another total copied | 3 |
+| date: day and month swapped | 1 |
+
+**EasyOCR → Qwen2.5-1.5B-Instruct** — wrong amount and date answers by kind:
+
+| kind | count |
+|---|---|
+| amount not in canonical form | 1,146 |
+| amount: other wrong value | 616 |
+| date not in ISO form | 610 |
+| date: other wrong value | 165 |
+| amount: another total copied | 133 |
+| date: hallucinated due date | 80 |
+| amount missing | 30 |
+| date missing | 20 |
+| date: day and month swapped | 5 |
+| amount: decimal/grouping separator misread (x10^k) | 2 |
+
 <!-- errors:end -->
 
 ## 6. Discussion
@@ -106,11 +221,31 @@ jobs were running at the same time, so treat the numbers as rough):
   it. The benchmark is therefore most informative for *general* systems —
   LLMs, vision-language models, commercial document AI — that have not been
   engineered for these documents.
-* **Normalisation is where general models fail.** See the per-field table:
-  identifiers and names are copied, but amounts and dates must be *converted*,
-  and that is where the zero-shot model loses most points.
-* **OCR noise compounds.** On scans, misread digits, dropped separators and
-  merged tokens break both amounts and identifiers.
+* **Normalisation is where the general model fails.** On the text track the
+  zero-shot Qwen2.5-1.5B finds the invoice number, names, VAT numbers, IBAN
+  and currency in 94–100 % of documents, but only about half of the amounts
+  and four in five dates are right. Most of these errors are not misreadings
+  but incomplete conversions: of the wrong amounts, the majority are not in
+  canonical form, typically half-converted — `33.261,30` becomes `33.261.30`
+  (decimal comma turned into a point, grouping point kept) or keeps its
+  currency symbol — and most wrong dates are copied as printed (`2.11.2025`,
+  `22/09/2026`). The error table above counts each kind.
+* **Arithmetic is not done.** Invoices with two VAT rates print one VAT line
+  per rate and no VAT total, so `vat_amount` must be added up. The zero-shot
+  model never does this: it gets `vat_amount` right on 0 of the 305 test
+  invoices with two rates (65.8 % with one rate) and, in 64 % of them,
+  returns one rate's amount instead. This alone explains most of the gap in
+  field accuracy between one and two VAT rates (84.3 vs 78.0 %).
+* **OCR noise compounds, and the two systems fail differently.** On scans,
+  both pipelines reach about two thirds field accuracy and only 3–4 % of
+  documents are fully correct. The rules lose fields whose label and value
+  the OCR places on different lines (side-by-side header blocks), so they
+  miss invoice numbers and names; the LLM reads those from context but
+  still mis-normalises amounts and dates, and misread characters
+  (`CZO9…` for `CZ09…`) break identifiers for both.
+* **Output validity.** Despite JSON-schema-constrained decoding, 5 (text)
+  and 10 (scan) of the 1,200 LLM responses were not parseable JSON and are
+  scored as empty, as the protocol prescribes.
 
 ## 7. Limitations
 
@@ -121,6 +256,9 @@ jobs were running at the same time, so treat the numbers as rough):
 * Company names are synthetic and stylistically uniform.
 * The baselines are small and CPU-bound by design; larger models and VLMs
   would score higher.
+* LLM outputs were produced with parallel decoding slots, which is not
+  bit-for-bit deterministic: a rerun can change a small number of answers.
+  The published prediction files are the ones scored here.
 
 ## 8. Reproduction
 
