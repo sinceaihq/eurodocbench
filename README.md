@@ -38,10 +38,10 @@ from datasets import load_dataset
 
 ds = load_dataset("sinceaihq/eurodocbench", split="test")
 doc = ds[0]
-doc["image"]        # PIL image of the scan
-doc["text"]         # PDF text layer
-doc["pdf"]          # original PDF bytes
-doc["fields"]       # ground truth
+doc["image"]  # PIL image of the scan
+doc["text"]  # PDF text layer
+doc["pdf"]  # original PDF bytes
+doc["fields"]  # ground truth
 ```
 
 Write one JSON line per document and score it:

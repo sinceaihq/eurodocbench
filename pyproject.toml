@@ -73,6 +73,7 @@ explicit-preview-rules = true
 "tests/*" = ["S", "N802"]
 "src/eurodocbench/locales.py" = ["E501"]
 "src/eurodocbench/baselines/rules.py" = ["E501"]
+"scripts/*" = ["E501"]  # report templates
 
 [tool.mypy]
 python_version = "3.10"
