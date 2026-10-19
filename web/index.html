@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EuroDocBench results</title>
+<meta name="description" content="Leaderboard and document browser for EuroDocBench, a synthetic benchmark of European invoice extraction.">
+<style>
+  :root { --bg:#fbfbfa; --fg:#1d1d1f; --muted:#5f6368; --card:#fff; --line:#e3e3e0; --accent:#1f5fbf;
+          --ok:#1a7f37; --bad:#c2410c; --chip:#f1f3f5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141416; --fg:#ececec; --muted:#a0a4ab; --card:#1d1e21; --line:#2e3035; --accent:#7fb0ff;
+            --ok:#4ade80; --bad:#fb923c; --chip:#26282c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:1.6rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:28px 0 8px; }
+  .lede, .note { color:var(--muted); } .note { font-size:.85rem; }
+  a { color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; white-space:nowrap; }
+  td.num { font-variant-numeric:tabular-nums; text-align:right; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  select { font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
+  .doc { display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap:16px; }
+  .doc img { width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  .val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.82rem; white-space:nowrap; }
+  .chip { display:inline-block; background:var(--chip); border-radius:999px; padding:1px 8px; font-size:.8rem; margin-right:4px; }
+  @media (max-width: 760px) { .doc { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>EuroDocBench</h1>
+  <p class="lede">A synthetic benchmark of European invoice extraction: 12 locales, 5 layouts, born-digital PDFs and
+    simulated scans. Systems must return 12 fields in canonical form — converting "1 234,56 €" to <code>1234.56</code>
+    and "5. března 2026" to <code>2026-03-05</code> is part of the task.
+    <a href="https://github.com/sinceaihq/eurodocbench">Code</a> ·
+    <a href="https://huggingface.co/datasets/sinceaihq/eurodocbench">Dataset</a> ·
+    <a href="https://github.com/sinceaihq/eurodocbench/blob/main/docs/REPORT.md">Report</a></p>
+
+  <h2>Leaderboard (test split, 1,200 documents)</h2>
+  <div class="card scroll"><table id="board"><thead></thead><tbody></tbody></table></div>
+  <p class="note" id="boardnote"></p>
+
+  <h2>Browse documents</h2>
+  <div class="card">
+    <div class="controls">
+      <label for="docsel">Document</label> <select id="docsel"></select>
+    </div>
+    <div class="doc">
+      <div><img id="docimg" alt="Scanned invoice"></div>
+      <div class="scroll"><table id="fields"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+  <p class="note">All documents, companies, VAT numbers and IBANs are synthetic; identifiers deliberately fail their
+    official checksums. Built by <a href="https://sinceai.ai">Since AI</a>.</p>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const pct = (x) => (x == null ? "—" : (100 * x).toFixed(1));
+
+  async function main() {
+    const [board, samples] = await Promise.all([
+      fetch("leaderboard.json").then((r) => r.json()),
+      fetch("samples.json").then((r) => r.json()),
+    ]);
+    // Leaderboard
+    const head = ["System", "Track", "Field accuracy", "Field F1", "Document accuracy", "Notes"];
+    $("board").querySelector("thead").innerHTML = "<tr>" + head.map((h) => `<th>${h}</th>`).join("") + "</tr>";
+    const tb = $("board").querySelector("tbody");
+    for (const row of board.rows) {
+      const tr = document.createElement("tr");
+      const cells = [row.system, row.track, pct(row.field_accuracy), pct(row.field_f1), pct(row.document_accuracy), row.note || ""];
+      cells.forEach((c, i) => { const td = document.createElement("td"); td.textContent = c; if (i >= 2 && i <= 4) td.className = "num"; tr.append(td); });
+      tb.append(tr);
+    }
+    $("boardnote").textContent = board.note || "";
+
+    // Document browser
+    for (const d of samples.documents) $("docsel").add(new Option(`${d.id} (${d.locale}, ${d.layout})`, d.id));
+    const systems = samples.systems;
+    function show(id) {
+      const d = samples.documents.find((x) => x.id === id);
+      $("docimg").src = d.image;
+      $("fields").querySelector("thead").innerHTML =
+        "<tr><th>Field</th><th>Gold</th>" + systems.map((s) => `<th>${s}</th>`).join("") + "</tr>";
+      const body = $("fields").querySelector("tbody");
+      body.replaceChildren();
+      for (const f of samples.fields) {
+        const tr = document.createElement("tr");
+        const name = document.createElement("td"); name.textContent = f; tr.append(name);
+        const gold = document.createElement("td"); gold.className = "val"; gold.textContent = d.gold[f] ?? "∅"; tr.append(gold);
+        for (const s of systems) {
+          const p = d.predictions[s][f];
+          const td = document.createElement("td"); td.className = "val " + (p.correct ? "ok" : "bad");
+          td.textContent = (p.correct ? "✓ " : "✗ ") + (p.value ?? "∅");
+          tr.append(td);
+        }
+        body.append(tr);
+      }
+    }
+    $("docsel").addEventListener("change", (e) => show(e.target.value));
+    show(samples.documents[0].id);
+  }
+  main().catch((err) => { document.querySelector("main").insertAdjacentHTML("beforeend", `<p class="bad">Could not load results: ${err}</p>`); });
+</script>
+</body>
+</html>
